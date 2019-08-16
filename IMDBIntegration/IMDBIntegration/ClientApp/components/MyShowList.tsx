@@ -28,7 +28,7 @@ export class MyShowList extends React.Component<RouteComponentProps<{}>, ShowLis
             <h1>My Shows</h1>
             <p>My Shows.</p>
             <p>
-                <Link to="">Add New</Link>
+                <Link to="/addshow">Add New</Link>
             </p>
             {contents}
         </div>;
