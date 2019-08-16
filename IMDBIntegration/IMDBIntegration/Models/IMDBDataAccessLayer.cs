@@ -82,5 +82,6 @@ namespace IMDBShow.Models
         public string imdbID { get; set; }
         public string Type { get; set; }
         public string Response { get; set; }
+        public string Season { get; set; }
     }
 }

@@ -35,23 +35,25 @@ export class MyShowList extends React.Component<RouteComponentProps<{}>, ShowLis
     }    
 
     // Returns the HTML table to the render() method.
-    private renderMyShowTable(empList: Show[]) {
+    private renderMyShowTable(showList: Show[]) {
         return <table className='table'>
             <thead>
                 <tr>
                     <th></th>
                     <th>Show Id</th>
-                    <th>Show Name</th>
-                    <th>Next Episode Id</th>                    
+                    <th>Show Title</th>
+                    <th>Next Episode Id</th>  
+                    <th>Next Episode Title(Season)</th>  
                 </tr>
             </thead>
             <tbody>
-                {empList.map(emp =>
-                    <tr key={emp.showId}>
+                {showList.map(shw =>
+                    <tr key={shw.showId}>
                         <td></td>
-                        <td>{emp.showId}</td>
-                        <td>{emp.showName}</td>
-                        <td>{emp.nextEpisodeId}</td>                       
+                        <td>{shw.showId}</td>
+                        <td>{shw.showTitle}</td>
+                        <td>{shw.nextEpisodeId}</td>     
+                        <td>{shw.nextEpisodeTitle}(Season: {shw.season})</td>     
                         
                     </tr>
                 )}
@@ -61,7 +63,9 @@ export class MyShowList extends React.Component<RouteComponentProps<{}>, ShowLis
 }
 
 export class Show {
-    showId: number = 0;
-    showName: string = "";
+    showId: string = "";
+    showTitle: string = "";
     nextEpisodeId: string = "";
+    nextEpisodeTitle: string = "";
+    season: string = "";
 } 
