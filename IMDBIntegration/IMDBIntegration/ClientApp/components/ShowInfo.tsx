@@ -20,6 +20,8 @@ export class ShowInfo extends React.Component<RouteComponentProps<{}>, ShowListD
             .then(data => {
                 this.setState({ showData: data, loading: false });
             });
+        this.handleWatched = this.handleWatched.bind(this);
+        this.handleAdd = this.handleAdd.bind(this);
     }
 
     public render() {
@@ -35,6 +37,56 @@ export class ShowInfo extends React.Component<RouteComponentProps<{}>, ShowListD
             </p>
             {contents}
         </div>;
+    }
+
+    private handleWatched(id: string, seriesId: string, season: string) {
+        alert("Hi");
+            fetch('api/IMDBShow/MarkWatched', {
+                method: 'POST',
+                body: JSON.stringify({
+                    ShowId: id,
+                    SeriesId: seriesId,
+                    Season: season
+                }),
+                headers: { "Content-Type": "application/json" }
+
+            }).then((response) => response.json())
+                .then((responseJson) => {
+                    //this.props.history.push("/fetchemployee");
+                    if (responseJson == 1) {
+                        alert("Show added to My Show List.");
+                    }
+                    else if (responseJson == 2) {
+                        alert("Episodes does not exists for this show")
+                    }
+                    else if (responseJson == 3) {
+                        alert("Already Added to My Shows.")
+                    }
+                });
+        
+    }
+
+    private handleAdd(id: string) {
+            fetch('api/IMDBShow/AddShow', {
+                method: 'POST',
+                body: JSON.stringify({
+                    ShowId: id
+                }),
+                headers: { "Content-Type": "application/json" }
+
+            }).then((response) => response.json())
+                .then((responseJson) => {
+                    //this.props.history.push("/fetchemployee");
+                    if (responseJson == 1) {
+                        alert("Show added to My Show List.");
+                    }
+                    else if (responseJson == 2) {
+                        alert("Episodes does not exists for this show")
+                    }
+                    else if (responseJson == 3) {
+                        alert("Already Added to My Shows.")
+                    }
+                });
     }
 
     // Returns the HTML table to the render() method.
@@ -73,7 +125,7 @@ export class ShowInfo extends React.Component<RouteComponentProps<{}>, ShowListD
                 </article>
                 <hr />
                 <a href={'//www.imdb.com/title/' + showData.imdbID} target="_blank" className="btn btn-space btn-warning" data-toggle="tooltip" title="See details on IMDB Website"><i className="fa fa-globe"></i> View on IMDB</a>
-                <button className={'btn btn-rounded btn-space ' + (showData.type == 'episode' ? 'btn-success' : 'btn-danger')} data-toggle="tooltip"><i className="fa fa-cloud-download"></i> {showData.type == 'episode' ? 'Mark as watched' : 'Add to My Show List'}</button>
+                <button onClick={showData.type == 'episode' ? (id) => this.handleWatched(showData.imdbID, showData.seriesID, showData.season) : (id) => this.handleAdd(showData.imdbID)} className={'btn btn-rounded btn-space ' + (showData.type == 'episode' ? 'btn-success' : 'btn-danger')} data-toggle="tooltip"><i className="fa fa-cloud-download"></i> {showData.type == 'episode' ? 'Mark as watched' : 'Add to My Show List'}</button>
             </div>
         )
 
@@ -98,4 +150,6 @@ export class IMDBEntity {
     language: string = "";
     totalSeasons: string = "";
     plot: string = "";
+    seriesID: string = "";
+    season: string= "";
 } 

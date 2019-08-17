@@ -78,7 +78,7 @@ export class AddShow extends React.Component<RouteComponentProps<{}>, ShowListDa
                     alert("Already Added to My Shows.")
                 }
             });
-    }
+        }
     }
 
     private handleInfo(id: string) {

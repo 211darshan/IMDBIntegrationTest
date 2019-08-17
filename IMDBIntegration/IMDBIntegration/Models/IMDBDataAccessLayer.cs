@@ -84,6 +84,27 @@ namespace IMDBShow.Models
                 throw;
             }
         }
+
+        public int UpdateNextEpisode(Show show)
+        {
+            try
+            {
+                var currentShow = db.UserShow.Where(x => x.ShowId == show.SeriesId && x.UserId == 2).FirstOrDefault();
+                if (currentShow!=null)
+                {
+                    currentShow.NextEpisodeId = show.NextEpisodeId;
+                    currentShow.ModifiedDate = DateTime.UtcNow;
+                    currentShow.ModifiedBy = 2;
+                }
+                db.Entry(currentShow).State = EntityState.Modified;
+                db.SaveChanges();
+                return 1;
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
     }
 
     public class ImdbEntity
@@ -108,8 +129,9 @@ namespace IMDBShow.Models
         public string imdbID { get; set; }
         public string Type { get; set; }
         public string Response { get; set; }
-        public string Season { get; set; }
-        public string TotalSeasons { get; set; }
+        public int Season { get; set; }
+        public int TotalSeasons { get; set; }
+        public string SeriesID { get; set; }
         public IEnumerable<NextEpisode> Episodes { get; set; }
     }
 
@@ -117,7 +139,7 @@ namespace IMDBShow.Models
     {
         public string Title { get; set; }
         public string Released { get; set; }
-        public string Episodes { get; set; }
+        public int Episode { get; set; }
         public string imdbRating { get; set; }
         public string imdbID { get; set; }
     }

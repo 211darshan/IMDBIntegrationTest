@@ -11,6 +11,8 @@ namespace IMDBShow.SharedEntities
         public string ShowTitle { get; set; }
         public string NextEpisodeId { get; set; }
         public string NextEpisodeTitle { get; set; }
-        public string Season { get; internal set; }
+        public int Season { get; set; }
+        public string SeriesId { get; set; }
+
     }
 }
