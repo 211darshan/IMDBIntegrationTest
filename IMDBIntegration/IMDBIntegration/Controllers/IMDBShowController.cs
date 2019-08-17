@@ -39,6 +39,26 @@ namespace IMDBShow.Controllers
             return myShows;
         }
 
+        [HttpPost]
+        [Route("api/IMDBShow/AddShow")]
+        public int AddShow([FromBody] Show show)
+        {
+            var nextEpisode = GetNextEpisodeId(show.ShowId);
+            if (nextEpisode != null)
+            {
+                show.NextEpisodeId = nextEpisode.imdbID;
+                return objIMDBShow.AddShow(show);
+            }
+            else return 2;
+        }
+
+        [HttpGet]
+        [Route("api/IMDBShow/Details/{id}")]
+        public ImdbEntity Details(string id)
+        {
+            return GetShowById(id);
+        }
+
         private ImdbEntity GetShowById(string id)
         {
             string url = "http://www.omdbapi.com/?i="+ id + "&apikey=cca62f46";
@@ -48,6 +68,21 @@ namespace IMDBShow.Controllers
                 var content = client.GetStringAsync(url).Result;
                 var show = JsonConvert.DeserializeObject<ImdbEntity>(content);
                 return show;
+            }
+        }
+
+        private NextEpisode GetNextEpisodeId(string id)
+        {
+            string url = "http://www.omdbapi.com/?i=" + id + "&apikey=cca62f46&season=1";
+            using (var client = new HttpClient())
+            {
+                var content = client.GetStringAsync(url).Result;
+                var show = JsonConvert.DeserializeObject<ImdbEntity>(content);
+                if (show != null && show.Episodes != null && show.Episodes.Any())
+                {
+                    return show.Episodes.FirstOrDefault();
+                }
+                return null;
             }
         }
 

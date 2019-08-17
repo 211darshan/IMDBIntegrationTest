@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using IMDBShow.SharedEntities;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -57,7 +58,32 @@ namespace IMDBShow.Models
             {
                 throw;
             }
-        }        
+        }
+
+        public int AddShow(Show show)
+        {
+            try
+            {
+                var showExist = db.UserShow.Any(x => x.ShowId == show.ShowId && x.UserId == 2);
+                if(showExist)
+                {
+                    return 3;
+                }
+                var userShow = new UserShow();
+                userShow.UserId = 2;
+                userShow.ShowId = show.ShowId;
+                userShow.CreatedDate = DateTime.UtcNow;
+                userShow.CreatedBy = 2;
+                userShow.NextEpisodeId = show.NextEpisodeId;
+                db.UserShow.Add(userShow);
+                db.SaveChanges();
+                return 1;
+            }
+            catch(Exception ex)
+            {
+                throw;
+            }
+        }
     }
 
     public class ImdbEntity
@@ -83,5 +109,16 @@ namespace IMDBShow.Models
         public string Type { get; set; }
         public string Response { get; set; }
         public string Season { get; set; }
+        public string TotalSeasons { get; set; }
+        public IEnumerable<NextEpisode> Episodes { get; set; }
+    }
+
+    public class NextEpisode
+    {
+        public string Title { get; set; }
+        public string Released { get; set; }
+        public string Episodes { get; set; }
+        public string imdbRating { get; set; }
+        public string imdbID { get; set; }
     }
 }
