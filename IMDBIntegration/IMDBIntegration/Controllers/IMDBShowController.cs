@@ -7,20 +7,29 @@ using IMDBShow.Models;
 using System.Net.Http;
 using Newtonsoft.Json;
 using IMDBShow.SharedEntities;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Configuration;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace IMDBShow.Controllers
 {
+    [Authorize]
     public class IMDBShowController : Controller
     {
         IMDBDataAccessLayer objIMDBShow = new IMDBDataAccessLayer();
+        IConfiguration configuration;
+
+        public IMDBShowController(IConfiguration iConfig)
+        {
+            configuration = iConfig;
+        }
 
         [HttpGet]
         [Route("api/IMDBShow/GetMyShows")]
         public IEnumerable<Show> GetMyShows()
         {
-            var shows = objIMDBShow.GetMyShows();
+            var shows = objIMDBShow.GetMyShows(GetCurrentUserId());
             List<Show> myShows = new List<Show>();
             foreach (var show in shows)
             {
@@ -43,16 +52,18 @@ namespace IMDBShow.Controllers
         [Route("api/IMDBShow/AddShow")]
         public int AddShow([FromBody] Show show)
         {
+            show.SeriesId = show.ShowId;
+            show.Season = 1;
             var nextEpisode = GetNextEpisodeId(show);
             if (nextEpisode != null)
             {
                 show.NextEpisodeId = nextEpisode.imdbID;
-                return objIMDBShow.AddShow(show);
+                return objIMDBShow.AddShow(show, GetCurrentUserId());
             }
             else return 2;
         }
 
-        [HttpPost]
+        [HttpPut]
         [Route("api/IMDBShow/MarkWatched")]
         public int MarkWatched([FromBody] Show show)
         {
@@ -60,9 +71,9 @@ namespace IMDBShow.Controllers
             if (nextEpisode != null)
             {
                 show.NextEpisodeId = nextEpisode.imdbID;
-                return objIMDBShow.UpdateNextEpisode(show);
+                return objIMDBShow.UpdateNextEpisode(show, GetCurrentUserId());
             }
-            else return 2;
+            return 2;
         }
 
         [HttpGet]
@@ -72,9 +83,18 @@ namespace IMDBShow.Controllers
             return GetShowById(id);
         }
 
+        [HttpDelete]
+        [Route("api/IMDBShow/Delete/{id}")]
+        public int Delete(string id)
+        {
+            return objIMDBShow.DeleteShow(id, GetCurrentUserId());
+        }
+
         private ImdbEntity GetShowById(string id)
         {
-            string url = "http://www.omdbapi.com/?i=" + id + "&apikey=cca62f46";
+            string key = configuration.GetValue<string>("MySettings:ImdbKey");
+
+            string url = "http://www.omdbapi.com/?i=" + id + "&apikey=" + key;
 
             using (var client = new HttpClient())
             {
@@ -87,37 +107,47 @@ namespace IMDBShow.Controllers
         private NextEpisode GetNextEpisodeId(Show currentShow)
         {
             string url = "http://www.omdbapi.com/?i=" + currentShow.SeriesId + "&apikey=cca62f46&season=" + currentShow.Season;
+            NextEpisode nextEpisode = null;
             using (var client = new HttpClient())
             {
                 var content = client.GetStringAsync(url).Result;
                 var show = JsonConvert.DeserializeObject<ImdbEntity>(content);
+
                 if (show != null && show.Episodes != null && show.Episodes.Any())
                 {
-                    var currentEpisode = show.Episodes.Where(x => x.imdbID == currentShow.ShowId).FirstOrDefault();
-                    var nextSposide = show.Episodes.Where(x => x.Episode > currentEpisode.Episode).OrderBy(x => x.Episode).FirstOrDefault();
-                    if (nextSposide == null && show.TotalSeasons == currentShow.Season)
+                    if (currentShow.SeriesId == currentShow.ShowId)
                     {
-                        return null;
+                        nextEpisode = show.Episodes.OrderBy(x => x.Episode).FirstOrDefault();
+                        return nextEpisode;
                     }
-                    else if (nextSposide == null && show.TotalSeasons > currentShow.Season)
+
+                    var currentEpisode = show.Episodes.Where(x => x.imdbID == currentShow.ShowId).FirstOrDefault();
+                    nextEpisode = show.Episodes.Where(x => x.Episode > currentEpisode.Episode).OrderBy(x => x.Episode).FirstOrDefault();
+
+                    //if (nextEpisode == null && show.TotalSeasons == currentShow.Season)
+                    //{
+                    //    return null;
+                    //}
+                    if (nextEpisode == null && show.TotalSeasons > currentShow.Season)
                     {
-                        url = "http://www.omdbapi.com/?i=" + currentShow.SeriesId + "&apikey=cca62f46&season=" + currentShow.Season + 1;
+                        url = "http://www.omdbapi.com/?i=" + currentShow.SeriesId + "&apikey=cca62f46&season=" + (currentShow.Season + 1);
                         content = client.GetStringAsync(url).Result;
                         show = JsonConvert.DeserializeObject<ImdbEntity>(content);
                         if (show != null && show.Episodes != null && show.Episodes.Any())
                         {
-                            return show.Episodes.FirstOrDefault();
+                            nextEpisode = show.Episodes.OrderBy(x => x.Episode).FirstOrDefault();
+                            return nextEpisode;
                         }
                     }
-                    else
-                    {
-                        return nextSposide;
-                    }
                 }
-
-                return null;
+                return nextEpisode;
             }
         }
-    }
 
+        private int GetCurrentUserId()
+        {
+            return int.Parse(this.User.Identity.Name);
+        }
+
+    }
 }

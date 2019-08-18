@@ -8,6 +8,7 @@ namespace IMDBShow.Models
         public User()
         {
             UserShow = new HashSet<UserShow>();
+            UserWatchedShow = new HashSet<UserWatchedShow>();
         }
 
         public int Id { get; set; }
@@ -20,5 +21,6 @@ namespace IMDBShow.Models
         public int? ModifiedBy { get; set; }
 
         public ICollection<UserShow> UserShow { get; set; }
+        public ICollection<UserWatchedShow> UserWatchedShow { get; set; }
     }
 }

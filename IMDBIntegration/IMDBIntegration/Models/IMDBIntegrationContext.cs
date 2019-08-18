@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.Extensions.Configuration;
 
 namespace IMDBShow.Models
 {
@@ -8,13 +9,15 @@ namespace IMDBShow.Models
     {
         public virtual DbSet<User> User { get; set; }
         public virtual DbSet<UserShow> UserShow { get; set; }
+        public virtual DbSet<UserWatchedShow> UserWatchedShow { get; set; }
+        IConfiguration configuration;
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (!optionsBuilder.IsConfigured)
             {
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. See http://go.microsoft.com/fwlink/?LinkId=723263 for guidance on storing connection strings.
-                optionsBuilder.UseSqlServer(@"Server=tcp:imdbintegration.database.windows.net,1433;Initial Catalog=IMDBIntegration;Persist Security Info=False;User ID=imdbuser;Password=imdb@123;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;");
+                var connectionString = Startup.config.GetValue<string>("MySettings:DbConnection");
+                optionsBuilder.UseSqlServer(connectionString);
             }
         }
 
@@ -59,6 +62,23 @@ namespace IMDBShow.Models
                     .HasForeignKey(d => d.UserId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK__UserShow__UserId__5165187F");
+            });
+
+            modelBuilder.Entity<UserWatchedShow>(entity =>
+            {
+                entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+
+                entity.Property(e => e.ModifiedDate).HasColumnType("datetime");
+
+                entity.Property(e => e.ShowId)
+                    .IsRequired()
+                    .HasMaxLength(200);
+
+                entity.HasOne(d => d.User)
+                    .WithMany(p => p.UserWatchedShow)
+                    .HasForeignKey(d => d.UserId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK__UserWatch__UserI__5535A963");
             });
         }
     }

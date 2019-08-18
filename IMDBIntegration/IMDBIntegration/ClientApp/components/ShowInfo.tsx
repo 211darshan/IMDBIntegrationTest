@@ -30,63 +30,64 @@ export class ShowInfo extends React.Component<RouteComponentProps<{}>, ShowListD
             ? <p><em>Loading...</em></p>
             : this.renderMyShowTable(this.state.showData);
         return <div>
-            <h1>My Shows</h1>
-            <p>My Shows.</p>
+            <h1>Show Info</h1>            
             <p>
-                <Link to="">Add New</Link>
+                <Link to="/addshow">Add show</Link>
             </p>
             {contents}
         </div>;
     }
 
     private handleWatched(id: string, seriesId: string, season: string) {
-        alert("Hi");
-            fetch('api/IMDBShow/MarkWatched', {
-                method: 'POST',
-                body: JSON.stringify({
-                    ShowId: id,
-                    SeriesId: seriesId,
-                    Season: season
-                }),
-                headers: { "Content-Type": "application/json" }
+        fetch('api/IMDBShow/MarkWatched', {
+            method: 'PUT',
+            body: JSON.stringify({
+                ShowId: id,
+                SeriesId: seriesId,
+                Season: season
+            }),
+            headers: { "Content-Type": "application/json" }
 
-            }).then((response) => response.json())
-                .then((responseJson) => {
-                    //this.props.history.push("/fetchemployee");
-                    if (responseJson == 1) {
-                        alert("Show added to My Show List.");
-                    }
-                    else if (responseJson == 2) {
-                        alert("Episodes does not exists for this show")
-                    }
-                    else if (responseJson == 3) {
-                        alert("Already Added to My Shows.")
-                    }
-                });
-        
+        }).then((response) => response.json())
+            .then((responseJson) => {
+                
+                if (responseJson == 1) {
+                    alert("Thanks for watching.")
+                }
+                else if (responseJson == 2) {
+                    alert("Episodes does not exists for this show")
+                }
+                else if (responseJson == 3) {
+                    alert("Already Marked as watched.")
+                }
+                else if (responseJson == 4) {
+                    alert("Show does not exists in your show List.")
+                }
+            });
+
     }
 
     private handleAdd(id: string) {
-            fetch('api/IMDBShow/AddShow', {
-                method: 'POST',
-                body: JSON.stringify({
-                    ShowId: id
-                }),
-                headers: { "Content-Type": "application/json" }
+        fetch('api/IMDBShow/AddShow', {
+            method: 'POST',
+            body: JSON.stringify({
+                ShowId: id
+            }),
+            headers: { "Content-Type": "application/json" }
 
-            }).then((response) => response.json())
-                .then((responseJson) => {
-                    //this.props.history.push("/fetchemployee");
-                    if (responseJson == 1) {
-                        alert("Show added to My Show List.");
-                    }
-                    else if (responseJson == 2) {
-                        alert("Episodes does not exists for this show")
-                    }
-                    else if (responseJson == 3) {
-                        alert("Already Added to My Shows.")
-                    }
-                });
+        }).then((response) => response.json())
+            .then((responseJson) => {
+                //this.props.history.push("/fetchemployee");
+                if (responseJson == 1) {
+                    alert("Show added to My Show List.");
+                }
+                else if (responseJson == 2) {
+                    alert("Episodes does not exists for this show")
+                }
+                else if (responseJson == 3) {
+                    alert("Already Added to My Shows.")
+                }
+            });
     }
 
     // Returns the HTML table to the render() method.
@@ -151,5 +152,5 @@ export class IMDBEntity {
     totalSeasons: string = "";
     plot: string = "";
     seriesID: string = "";
-    season: string= "";
+    season: string = "";
 } 

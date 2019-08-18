@@ -13,46 +13,12 @@ namespace IMDBShow.Models
     public class IMDBDataAccessLayer
     {
         IMDBIntegrationContext db = new IMDBIntegrationContext();
-        IMDBIntegrationContext ctx=new IMDBIntegrationContext();
 
-        public IEnumerable<UserShow> GetMyShows()
+        public IEnumerable<UserShow> GetMyShows(int userId)
         {
             try
             {
-
-                string url = "http://www.omdbapi.com/?i=tt3896198&apikey=cca62f46";
-
-                using (var client = new HttpClient())
-                {
-                    var content = client.GetStringAsync(url).Result;
-                    var dd = JsonConvert.DeserializeObject<ImdbEntity>(content);
-                }
-                return ctx.UserShow.ToList();
-
-                //using (WebClient wc = new WebClient())
-                //{
-                //    var json = wc.DownloadString(url);
-                //    JavaScriptSerializer oJS = new JavaScriptSerializer();
-                //    ImdbEntity obj = new ImdbEntity();
-                //    obj = oJS.Deserialize<ImdbEntity>(json);
-                //    if (obj.Response == "True")
-                //    {
-                //        txtActor.Text = obj.Actors;
-                //        txtDirector.Text = obj.Director;
-                //        txtYear.Text = obj.Year;
-
-                //    }
-                //    else
-                //    {
-                //        MessageBox.Show("Movie not Found!!!");
-                //    }
-
-
-                //}
-
-
-
-
+                return db.UserShow.Where(x => x.UserId == userId).ToList();
             }
             catch
             {
@@ -60,43 +26,22 @@ namespace IMDBShow.Models
             }
         }
 
-        public int AddShow(Show show)
+        public int AddShow(Show show, int userId)
         {
             try
             {
-                var showExist = db.UserShow.Any(x => x.ShowId == show.ShowId && x.UserId == 2);
-                if(showExist)
+                var showExist = db.UserShow.Any(x => x.ShowId == show.ShowId && x.UserId == userId);
+                if (showExist)
                 {
                     return 3;
                 }
                 var userShow = new UserShow();
-                userShow.UserId = 2;
+                userShow.UserId = userId;
                 userShow.ShowId = show.ShowId;
                 userShow.CreatedDate = DateTime.UtcNow;
-                userShow.CreatedBy = 2;
+                userShow.CreatedBy = userId;
                 userShow.NextEpisodeId = show.NextEpisodeId;
                 db.UserShow.Add(userShow);
-                db.SaveChanges();
-                return 1;
-            }
-            catch(Exception ex)
-            {
-                throw;
-            }
-        }
-
-        public int UpdateNextEpisode(Show show)
-        {
-            try
-            {
-                var currentShow = db.UserShow.Where(x => x.ShowId == show.SeriesId && x.UserId == 2).FirstOrDefault();
-                if (currentShow!=null)
-                {
-                    currentShow.NextEpisodeId = show.NextEpisodeId;
-                    currentShow.ModifiedDate = DateTime.UtcNow;
-                    currentShow.ModifiedBy = 2;
-                }
-                db.Entry(currentShow).State = EntityState.Modified;
                 db.SaveChanges();
                 return 1;
             }
@@ -104,6 +49,58 @@ namespace IMDBShow.Models
             {
                 throw;
             }
+        }
+
+        public int UpdateNextEpisode(Show show, int userId)
+        {
+            try
+            {
+                var currentShow = db.UserShow.Where(x => x.ShowId == show.SeriesId && x.UserId == userId).FirstOrDefault();
+                if (currentShow != null)
+                {
+                    if (currentShow.NextEpisodeId == show.NextEpisodeId)
+                    {
+                        return 3;
+                    }
+                    currentShow.NextEpisodeId = show.NextEpisodeId;
+                    currentShow.ModifiedDate = DateTime.UtcNow;
+                    currentShow.ModifiedBy = userId;
+                    db.Entry(currentShow).State = EntityState.Modified;
+                    var userWatchedShow = new UserWatchedShow();
+                    userWatchedShow.UserId = userId;
+                    userWatchedShow.ShowId = show.ShowId;
+                    userWatchedShow.CreatedDate = DateTime.UtcNow;
+                    userWatchedShow.CreatedBy = userId;
+                    db.UserWatchedShow.Add(userWatchedShow);
+                    db.SaveChanges();
+                    return 1;
+                }
+                return 4;
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public int DeleteShow(string id, int userId)
+        {
+            try
+            {
+                UserShow shw = db.UserShow.Where(x => x.ShowId == id && x.UserId == userId).FirstOrDefault();
+                db.UserShow.Remove(shw);
+                db.SaveChanges();
+                return 1;
+            }
+            catch
+            {
+                throw;
+            }
+        }
+
+        public User IsUserAuthenticated(string userName, string Password)
+        {
+            return db.User.Where(x => x.UserName == userName && x.PasswordHash == Password).FirstOrDefault();
         }
     }
 
